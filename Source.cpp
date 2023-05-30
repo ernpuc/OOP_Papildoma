@@ -23,6 +23,7 @@ using std::regex_search;
 
 void pildFailas(multimap< string, int, less< string > >& wordLoc, map< string, int, less< string > >& wordCount);
 void printResult(multimap< string, int, less< string > > wordLoc, map< string, int, less< string > > wordCount);
+string istrintiZenklus(const std::string& input);
 
 int main()
 {
@@ -43,11 +44,16 @@ void pildFailas(multimap< string, int, less< string > >& wordLoc, map< string, i
 	int n = 0;
 	cout << "Įveskite failo pavadinimą: ";
 	cin >> pavad;
+	cout << "Tekste pasikartojančios nuorodos: " << endl;
+	regex urlRegex1(R"(https?://\S+)");
+	regex urlRegex2(R"(www\.\S+)");
 	ifstream df(pavad);
 	while (std::getline(df, eil)) {
 		std::istringstream iss(eil);
 		if (!eil.empty()) n++;
 		while (iss >> elem) {
+			if (regex_search(elem, urlRegex1) || regex_search(elem, urlRegex2)) cout << elem << endl;
+			elem = istrintiZenklus(elem);
 			wordLoc.insert(make_pair(elem, n));
 			wordCount[elem]++;
 		}
@@ -62,11 +68,9 @@ void printResult(multimap< string, int, less< string > > wordLoc, map< string, i
 	rf1 << "---------------" << endl;
 	rf2 << "Eilutė    Žodis" << endl;
 	rf2 << "---------------" << endl;
-	regex urlRegex1(R"(https?://\S+)");
-	regex urlRegex2(R"(www\.\S+)");
-	cout << "Tekste pasikartojančios nuorodos: " << endl;
+	cout << "Tekste daugiau nei vieną kartą pasikartojantys žodžiai ir jų pasikartojimų skaičius įrašyti į 'Uzd1.txt'" << endl;
+	cout << "Tekste daugiau nei vieną kartą pasikartojantys žodžiai ir teksto eilutės, kuriose jie yra, įrašyti į 'Uzd2.txt'" << endl;
 	for (const auto& i : wordCount) {
-		if (regex_search(i.first, urlRegex1) || regex_search(i.first, urlRegex2)) cout << i.first << endl;
 		if (i.second > 1) {
 			rf1 << left << setw(10) << i.second << i.first << endl;
 			auto range = wordLoc.equal_range(i.first);
@@ -75,6 +79,12 @@ void printResult(multimap< string, int, less< string > > wordLoc, map< string, i
 			}
 		}
 	}
-	cout << "Tekste daugiau nei vieną kartą pasikartojantys žodžiai ir jų pasikartojimų skaičius įrašyti į 'Uzd1.txt'" << endl;
-	cout << "Tekste daugiau nei vieną kartą pasikartojantys žodžiai ir teksto eilutės, kuriose jie yra, įrašyti į 'Uzd2.txt'" << endl;
+}
+
+string istrintiZenklus(const std::string& input) {
+	std::string result = input;
+	result.erase(std::remove_if(result.begin(), result.end(), [](unsigned char c) {
+		return !std::isalnum(c);
+		}), result.end());
+	return result;
 }
